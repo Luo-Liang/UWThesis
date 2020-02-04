@@ -1,0 +1,50 @@
+\section{Introduction}
+Today, learning systems have gain significant attention in the literature for the overwhelming popularity of machine-learning related workloads, be it in a private cluster, datacenter, or in the public cloud.
+
+While most of work to date in the systems and architecture community has focused on improving the efficiency of evaluating trained models. This makes sense given that a model is trained only once but can be used many times for inference. However, arriving at a trained model frequently requires experimentation, and thus multiple training runs, each of which may take days. Accelerating the training process lets DL scientists iterate faster and design better model.
+
+Traditionally, training has been viewed as a compute-bound problem, best done in a single large compute node with many accelerators. However, the ever-growing data volume pushes for monster-sized models to a scale where even the exponentiation of compute power growth in single device couldn't handle. As DL models get bigger, training time gets prohibitively longer. Timely training requires exploiting parallelism with a distributed system.
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+  \hline
+  Models & Complexity & Size & Time & Configuration \\
+  \hline
+  Linear Regression~\cite{seber2012linear} & O($D^3+ N^2D$) & Small & Short & CPU \\
+  \hline
+  SVM~\cite{wang2005support} & O($N^2D^2$) & Small & Short & CPU \\
+  \hline
+  GBDT~\cite{friedman2001greedy} & O($TLFN$) & Small & Short & A few CPUs \\
+  \hline
+  \hline 
+  AlexNet~\cite{alexnet}   & 0.0058 & 48M & 6 days  & 2x GTX 580\\
+  \hline
+  ZFNet~\cite{ZFNet}   & 0.0062  &  $\approx$48M  & 12 days  & GTX 580\\
+  \hline
+  VGGNet~\cite{VGGNet}   & 0.12  & 137M & 15 days & 4x Titan Black\\
+  \hline
+  GoogleNet~\cite{GoogleNet}   & 0.03  & 9M & 7 days & A few GPUs\\
+  \hline
+  ResNet~\cite{RESNET}   & 0.117 &  58M & 21 days & 8x GPUs\\
+  \hline
+  Xception~\cite{Chollet_2017}  & 5.0  & 22M & 30 days & 60x K80\\
+  \hline
+  \hline
+  BERT~\cite{bert}  & 3.8 & 340M & 4 days & 16x TPUs v2 \\
+  \hline
+  GPT-2~\cite{GPT2}  & 248 & 1.5B & 7+ days~\cite{gpt2Time} & 256x TPUs v3 \\
+  \hline
+  \hline
+%  Device Placement~\cite{mirhoseini2017device} 2017 & - & 27 hours & 80 GPU nodes  \\
+%  \hline
+  NAS~\cite{zoph2016neural}  & 31 & 86M & 28 days & 800 K40 GPUs\\
+  \hline
+  AlphaGoZero~\cite{silver2016mastering}  & 1800 & - & 1 day & 5000x TPUs \\
+  \hline
+\end{tabular}
+\caption{A few representative machine learning techniques and models that support increasingly complex tasks (trees, support vector machines, neural networks) and their complexities to train (pfs-day, or days to train computing at 1 PFlop/s. 1PF/s roughly corresponds to 64 Tesla V100 GPUs FP32, or 8 with mixed-precision FP16, running at peak throughput), and their reported training time and the machines they are trained on. We used the same method of estimating complexity as in the original OpenAI blog post~\cite{AIandCom3:online} for the additional models in the table. $D$: features. $N$: samples. $L$: leaves per tree. $T$: number of trees to build.}
+\label{table:trend}
+\end{table}
+
+Table~\ref{table:trend} gives a summary of how the machines learning models/techniques are getting so much more demanding in terms of compute resources, such that the use of hundreds or even thousands of machines and accelerators for weeks is commonplace. 
