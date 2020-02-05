@@ -1,0 +1,72 @@
+\section{Background}
+We now establish conventions used in this paper, and familiarize the reader with basic concepts for distributed training.
+
+
+\subsection{Training a ML model}
+Different types of models may appear to have different ways of training, but sitting at the center is the common notion of parameters and gradients. 
+
+Modern DL models can have hundreds of \textit{layers} making up multi-megabyte-size \textit{models}.% (or sets of weights or parameters).
+The training process has three phases. In the \textit{forward pass}, a prediction is generated for an input. In the \textit{backward pass}, the prediction is compared with a label to calculate prediction error; then, through \textit{backpropagation}~\cite{backprop}, the gradient for each parameter %of each layer 
+is calculated with respect to this error. The model is then \textit{updated} using these gradients, often using a variant of the gradient descent optimization algorithm. Computation is often done on GPUs or other accelerators suited to regular data-parallel operations, processing a batch of samples at once (\textit{minibatching}).
+%Multiple examples are processed in each GPU simultaneously in a single \emph{minibatch} which typically contains tens to hundreds of samples. 
+%Each GPU processes multiple examples simultaneously in a \emph{minibatch} which typically contains tens to hundreds of samples. 
+
+\begin{figure}[t!]
+	\centering
+	\includegraphics[width=\linewidth, trim=2 3 3 3,clip]{Figures/distributedtraining.pdf}
+	\caption{A few iterations of distributed training pipeline of neural networks.}
+	\label{fig:distributedtraining}
+\end{figure}
+
+\subsection{Distributed Training in DL}
+The distributed training process (Figure~\ref{fig:distributedtraining}) is different in a few ways.
+%First, a mean gradient is calculated for each minibatch in each GPU. %
+First, a mean gradient is calculated across all minibatches in all the GPUs in each machine. Then, the mean of the gradients from each machine is calculated. Finally, the model is updated based on that mean, new parameters are broadcast to each machine and GPU, and the next batch is trained. Gradient aggregation and optimization are element-wise operations. Aggregation sums gradients from all workers. Optimization updates the model using aggregated gradients with an algorithm such as SGD. Our design goal is to overlap aggregation and optimization of different keys with communication. This paper focuses on optimizing calculation of both the mean gradient across machines and the subsequent model update (or \textit{parameter exchange}).
+
+%n the second, each worker also stores a shard or replica of the global model; model updates are done through collective communication operations involving all machines.
+
+The process described here is \textit{synchronous training}, where all machines and GPUs execute a new minibatch simultaneously and update the model based on the gradients in the current iteration. It is also possible to train asynchronously~\cite{tensorflow,revisitSGD,GeePS,recht2011hogwild,projectAdam,googleDNN}, sacrificing reproducibility for a potential throughput increase. %updating the model with the gradient from each GPU's minibatch with little or no synchronization among machines; this can improve throughput in some situations but may limit repeatability and debuggability. 
+We focus on synchronous training due to its simplicity and commonality in industry, but our techniques can also benefit asynchronous training.
+
+\begin{figure}[t!]
+	\centering
+	\includegraphics[width=\linewidth, trim=2 3 3 3,clip]{Figures/aggregationapproaches.pdf}
+	\caption{Aggregation is commonly done with one of the three prevailing paradigms, parameter server, collectives all-reduce, and hierarchical aggregation in practice.}
+	\label{fig:aggregationapproaches}
+\end{figure}
+
+\subsection{Distributed Training is Here to Stay}
+Faster and more powerful accelerators (most notably TPUs~\cite{Jouppi:2017:IPA:3079856.3080246}) open up the possibility of training in a single device. It all of sudden seems plausible to build a ``supercomputer'' for training, which completely eliminates the need for costly communication. 
+
+Unfortunately, building a training supercomputer does not avoid the problems, for at least two reasons. From a historic perspective, it never happens that there is a surplus in the compute power when it comes to new models, as shown in Table~\ref{table:trend}: scientists can always find models whose complexities are well beyond reach of a single device, which frequently ended up being trained in a distributed fashion. From an architecture perspective, compute density cannot scale forever as many hard limits are imposed on the number of transistors to fit on a fixed area, including physical effects and cooling constraints. When near these limits, it gets prohibitively difficult to build faster chips within a confined area. 
+
+On the other hand, any training that spans device boundary, not necessarily machine boundary, can be classified as distributed training, and the communication medium need not be limited to conventional network media, but can also include device buses. With this broad view, distributed training is inherent in deep learning. %at each hierarchy (GPU vs PCI-E, Node vs Ethernet), we can observe large gap between the bandwidth of communication and compute. 
+
+\subsection{Gradient Aggregation: Common Practices}
+In a loose taxonomy, collecting gradients for aggregation is commonly done with one of the following paradigms. Figure~\ref{fig:aggregationapproaches} summarizes this. 
+
+\noindent\textbf{Parameter Servers (PS)}~\cite{ps0,ps1,ps2,ps3, phubsocc, phubsysml, poseidon,cui2016geeps}. %Nodes are assigned the role of \textit{workers} or \textit{servers}. 
+PSs are key-value stores, where keys and values represent the model's layer IDs and weights. PSs can be centralized or sharded. In each iteration, all workers update the model stored in PSs with their locally-produced gradients. %We refer to aggregation with fully sharded PSs as flat aggregation (FA).
+
+\noindent\textbf{Collective AllReduce (CA)}~\cite{Sack:2011:SCM:2522220,Thakur:2005:OCC:2747766.2747771,collectivesOptimization,blum2000architectures,bala1995ccl}. Popular in the context of MPI, all nodes in CA participate in the communication, usually running symmetric tasks. The end goal of CA is that all nodes have a globally-reduced copy of the data. Widely used CA in training deep learning models include halving-doubling~\cite{ImageNetIn1Hour}, ring and double binary tree~\cite{Operatio73:online, Sergeev2018HorovodFA}.
+
+\noindent\textbf{Hierarchical Aggregation (HA)}. Pervasive in the HPC world~\cite{Graham:2016:SHA:3018058.3018059}, HA refers to the generic technique of aggregating data in multiple steps, from local to global. Exemplar usage of HA in the distributed training context include~\cite{firecaffe,choblueconnect,Geng:2018:HHP:3229543.3229544,sysmlblueconnect}, though in the context of proprietary networks. %From a structural perspective, HA most resembles the physical datacenter network itself. 
+
+\subsection{More Efficient Distributed Training: Prior Arts}
+Approaches to accelerating distributed training can be classified into one of the broad categories in the current literature.
+
+\noindent\textbf{Synchronize less often}. One way to achieve a lower synchronization frequency is to oversubscribe GPUs. This can be done by using a very large batch size, fully utilizing GPU memories, making GPU compute becomes the bottleneck~\cite{Nowanyon13:online, ImageNetIn1Hour, sridharan2018scaleout, jia2018highly}. Large batch sizes reduce communication frequency. However, this eliminates the potential of achieving a larger speedup with a fast communication plane. For example, with ResNet-50, ~\cite{Shen2018NexusA} shows only 10 samples are needed to fully utilize a recent GPU. This means the computation of large batches can be further spread to more GPUs, provided that communication overhead is low. Further, large batch optimization is also not universally available (requiring GPUs with large memory) and may be subject to worse generalization~\cite{keskar2016large}.
+
+Orthogonal to large batch optimization, another line of work target at less synchronization tunes the consistency model of distributed training, with relaxed consistency~\cite{DBLP:journals/corr/DaiKWHGX14,SSP,BSP,Wei:2015:MCC:2806777.2806778,Litz,xie2018orpheus,wang2018adaptive}. Generally, these relaxed consistency models do not mandate a strict barrier for synchronization at iteration granularity, and instead, allows for staleness in the model and a potential different view of model from each worker, removing the synchronization overhead from the critical path. However, these methods suffer from difficulty in reproducing the models. 
+
+\noindent\textbf{Send less data}. Sending less data accelerates distributed training in a bandwidth-bound environment, and can be achieved through (1) lossless compression~\cite{burtscher2009fpc}; (2) lossy compression, removing redundancy in the SGD algorithm~\cite{lin2017deep}; (3) quantizing update gradients to low bit representations and locally apply residual errors~\cite{cntk1bt, lim20183lc} and (4) decomposing large update matrices~\cite{projectAdam,poseidon,xie2015distributed} and reconstructing at destination. These methods either trade more computation for less communication, or risk affecting the final convergence accuracy of the model, and both of which may turn out \textit{increasing} the total wall clock time required to reach the target accuracy.
+
+\noindent\textbf{Build faster clusters}. Another series of work involves building specialized hardware clusters for distributed training with quick interconnects to tackle communication bottlenecks~\cite{DBLP:journals/corr/abs-1711-00489, You:2018:ITM:3225058.3225069, DBLP:journals/corr/abs-1711-04325,jia2018highly,DBLP:journals/corr/abs-1811-05233,sun2019optimizing, ImageNetIn1Hour, firecaffe}. While the results have been encouraging, these approaches demand steep investments and are not available to everyone.
+
+\noindent\textbf{Hide communication latency}. Most modern frameworks encode the model being trained as a dataflow graph. An operator is executed as soon as its dependencies are resolved, and this allows overlapping of communication and computation during the backpropagation stage of distributed training. Notable applications of this idea include~\cite{hashemi2018tictac, prioritybased, poseidon}. However, communication latency hiding has severe limits: faster computation device leaves smaller room; many model training is in fact bandwidth bound, and hiding latency only has limited impact on the total training time.
+
+\noindent\textbf{Use finer grain parallelism}. This can be done by blending in higher compute hardware utilization of data parallelism and lower communication cost of model parallelism to form pipelined parallelism~\cite{harlap2018pipedream}. This can also be done by allowing a flexible combination of slicing along arbitrary dimensions of S(ample)O(perator)A(ttribute)P(arameter), which enables more execution possibilities, effectively enlarge the action space. More efficient schedule can then be determined by intelligently searching through the enlarged space by taking communication cost into account~\cite{jia2018beyond}. However, these methods have the limit of needing to research as soon as the underlying hardware environment, or the models being trained change.
+
+\noindent\textbf{Accelerate at network level}. The emergence of programmable network devices open up the opportunity to accelerate distributed training at the core of network, allowing gradient aggregation in the network devices, resulting in lower parameter exchange latency and lower bandwidth requirement (e.g. broadcast of aggregated model can be efficiently done with a network switch~\cite{sapio2019scaling,luomotivating}). Current programmable devices are not without limits, enforcing hard constraints on compute and memory.
+
+\noindent\textbf{Codesign software with hardware, cluster, network and environment}. This is the approach where the software stack is codesigned with underlying hardware, cluster, physical network and environment, based on the observation that existing software stack does not take important factors (such as underlying hardware, the topology of the physical network, and the shared environments of the commercial clouds) into consideration. Examples of this approach include \plink{}~\cite{phubsocc, phubsysml}.

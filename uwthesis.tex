@@ -45,7 +45,6 @@
 %
 % The following line would print the thesis in a postscript font 
 
-\usepackage{natbib}
 % \def\bibpreamble{\protect\addcontentsline{toc}{chapter}{Bibliography}}
 
 \setcounter{tocdepth}{1}  % Print the chapter and sections to the toc
@@ -56,7 +55,7 @@
 
 % --- sample stuff only -----
 % These format the sample code in this document
-
+\usepackage{hyperref} 
 \usepackage{alltt}  % 
 \usepackage{fontspec}
 \usepackage{xspace}
@@ -88,6 +87,16 @@
  \newcommand{\phub}{Parameter Hub\xspace}
  \newcommand{\plink}{Parameter Link\xspace}
  \newcommand{\pseries}{Parameter\xspace}
+ \newcommand{\azure}{\textcolor{azureC}{Azure}\xspace}
+\newcommand{\ectwo}{\textcolor{ec2C}{EC2}\xspace}
+%\newcommand{\marcopolo}{Marcopolo\xspace}
+\newcommand{\marcopolo}{ProbeEmbed\xspace}
+\newcommand{\ha}{AggEngine\xspace}
+\newcommand{\mlha}{2LHA\xspace}
+\newcommand{\strongrandom}{Balanced Random\xspace}
+\newcommand{\autoplink}{Autotune\xspace}
+\newcommand{\code}[1]{\texttt{\small{#1}}}
+\newcommand{\strongbaseline}{strong baseline\xspace}
 
 % metafont font.  If logo not available, use the second form
 %
@@ -183,7 +192,7 @@ Special thanks to Novak Djokovic, we may never meet, but you bring the inspirati
 \end{center}}
 
 \input{introduction.tex}
-
+\input{background.tex}
 \bibliographystyle{plain}
 \bibliography{uwthesis}
 
