@@ -1,4 +1,4 @@
-\section{\phub}
+\section{\phub: Streamlined Software Stack for Rack-Scale PSs}
 
 \begin{table}[tb!]
         \centering
@@ -161,9 +161,15 @@ All message transmission, reception, and processing for that chunk is done on th
 
 This scheme imposes challenges in balancing load across cores, queue pairs and completion queues. \phub uses a 4/3 approximation set partition algorithm to balance each component's workload at each level, which produces practically balanced assignments in our experiments. \phub{}'s chunk mapping mechanism is summarized in Figure \ref{fig:mappingChunkToCore}.
 
+\subsection{The \phub Service API and Interoperability with other Frameworks}
+\phub{}'s API is designed for compatibility with multiple DNN training frameworks. Workers use \phub by first calling \code{PHub::\\CreateService} on the connection manager. This sets up access control and a namespace for the training job and returns a handle. The client side uses the handle to finish setup. \phub uses the namespace and an associated nonce for isolation and access control. 
 
+Jobs call \code{PHub::ConnectService} to rendezvous servers and workers, exchanging addresses for communication. This call replaces \code{Van::Connect} in MxNet, \code{Context::connect\\FullMesh} in Caffe2 and \code{GrpcServer::Init} in TensorFlow. \code{PHub::InitService} causes the current \phub instance to allocate and register receive and merge buffers. \phub also authenticates each worker's identity using the nonce. Authentication is a one-time overhead and once a connection is established, \phub assumes the remote identity associated with that address/port/queue number does not change during training.
+
+\phub{}'s functional APIs include standard synchronous or asynchronous \code{PHub::Push/Pull} operations that are used in TensorFlow (\code{GraphMgr::SendInputs/RecvOutputs}) and MxNet (\code{KVStoreDist::PushImpl/PullImpl}). \phub also includes a fused \code{PHub::PushPull} operation that perform a push, waits until all pushes are complete, and pulls the latest model. The fused operation often saves a network round-trip as push and pulls are frequently issued consecutively. This operator can serve as a drop-in replacement for Caffe2's \code{Algorithm::Run}.
 
 
 \subsection{Interaction of \pbox and \phub}
 \phub takes full advantage of \pbox by extending the chunk-to-core mapping scheme%It ensures balance across queue pairs, completion queues, interfaces, cores, and NUMA domains. 
 , ensuring balance across interfaces and NUMA domains. \phub further guarantees no inter-processor traffic on \pbox, and completion queues and queue pairs in an interface card are used by only one core in the same NUMA domain to promote locality and avoid coherence traffic. In essence, \pbox forms micro-shards inside a box.
+
