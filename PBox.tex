@@ -1,4 +1,4 @@
-\section{\pbox: a Balanced Hardware Design for Parameter Servers at Rack-Scale}
+\chapter{\pbox: a Balanced Hardware Design for Parameter Servers at Rack-Scale}
 \label{sec:phub}
 We now describe \pbox, the solution to inefficient distributed training for clusters with a flat network topology. \pbox provides a re-design of a PS at the hardware level, and mostly applies to situations where the user assumes full control over the cluster.
 
@@ -23,7 +23,7 @@ We now describe \pbox, the solution to inefficient distributed training for clus
 	\label{table:bwReqDC}
 \end{table}
 
-\subsection{Insufficient Bandwidth and Overprovisioned Compute Resources in Rack-Scale Clusters}
+\section{Insufficient Bandwidth and Overprovisioned Compute Resources in Rack-Scale Clusters}
 Centralized PSs have lower cost than NCS PSs, and half of the bandwidth stress compared to CS PSs on each interface card. Thus it is desirable to have a centralized reduction entity at rack level. However, scaling a centralized PS to rack scale is challenging~\cite{firecaffe}.
 %Because they dedicate their full bandwidth to the PS process, centralized PSs are bandwidth efficient without the extra hardware cost for non-colocated sharded PSs. They are also compute efficient when not overwhelmed~\cite{firecaffe}. However, while optimizations in \mysection\ref{sec:commonOptimizations} benefit sharded servers, they have only limited effect on the throughput of a centralized PS. 
 %The root cause is hardware imbalance in resource allocation of the host machine.
@@ -40,7 +40,7 @@ One trivial solution would be to simply use interfaces with higher bandwidth. Ho
 %Software changes alone is not enough to scale training throughput on a typical centralized parameter server, because the hardware offered is inbalanced itself: the provisioned network bandwidth is vastly smaller than available memory bandwidth.
 %Therefore, a hardware design that optimizes balance is needed to fully scale a centralized PS. 
 
-\subsection{\pbox Architecture}
+\section{\pbox Architecture}
 This section describes \pbox, our \textit{balanced parameter exchange system}. We maintain that a centralized system, when architected properly, can provide high throughput, low latency, sufficient scalability for a rack, and low cost. We focus on the hardware side of \pbox, and in the next section, we detail the software side.
 
 We prototyped \pbox using an off-the-shelf server platform that was configured to our requirements. Our goal was to balance IO and memory bandwidth; our prototype system had memory bandwidth of 120 GB/s and theoretical overall bidirectional IO bandwidth of 140 GB/s. To fully utilize resources, \pbox needed a matching network capability, which we provided by using multiple network interfaces. Figure \ref{fig:phub} shows the resulting \pbox design. The system includes 10 network interfaces, each of 56 Gbps link speed, connected to a switch. This uses all PCIe bandwidth on our dual socket prototype and provides roughly 136 GB/s bandwidth once IB and PCIe framing overheads are taken into account, balancing IO and memory bandwidth.
@@ -62,7 +62,7 @@ We prototyped \pbox using an off-the-shelf server platform that was configured t
 \end{figure}
 
 
-\subsection{Multi-Rack Deployment and Topology-Aware Reduction}
+\section{Multi-Rack Deployment and Topology-Aware Reduction}
 \label{sec:hierarchicalReduction}
 To extend service coverage of a single \pbox device, we associate a \pbox with a ToR during deployment, for two reasons. First, full bisection bandwidth is achievable for machines in the same rack, making it ideal for a central reduction entity as \pbox, while oversubscription occurs between the ToR and the cluster network. Second, as we show later, a single \pbox has enough scalability for a typical rack of worker machines.
 

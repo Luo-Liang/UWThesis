@@ -1,4 +1,5 @@
-\section{Introduction}
+\chapter {Introduction}
+
 Today, learning systems have gained significant attention in the literature for the overwhelming popularity of machine-learning (ML) related workloads. Most of work to date in the systems and architecture community has focused on improving the efficiency of evaluating trained models. This makes sense given that a model is trained only once but can be used many times for inference. However, arriving at a trained model frequently requires experimentation, and thus multiple training runs, each of which may take days. Accelerating the training process lets ML scientists iterate faster and design better model.
 
 Traditionally, training has been viewed as a compute-bound problem, best done in a single large compute node with many accelerators. However, the ever-growing data volume pushes for monster-sized models, a scale even the exponentiation of compute power growth in single device couldn't handle. As ML models get bigger, training time gets prohibitively longer. Timely training requires exploiting parallelism with a distributed system.
@@ -32,6 +33,8 @@ Traditionally, training has been viewed as a compute-bound problem, best done in
   BERT~\cite{bert}  & 3.8 & 340M & 4 days & 16x TPUs v2 \\
   \hline
   GPT-2~\cite{GPT2}  & 248 & 1.5B & 7+ days~\cite{gpt2Time} & 256x TPUs v3 \\
+  \hline
+  Turing-NLG~\cite{TuringNL61:online}  & Unknown & 17B & Unknown & 256x V100 \\
   \hline
   \hline
 %  Device Placement~\cite{mirhoseini2017device} 2017 & - & 27 hours & 80 GPU nodes  \\

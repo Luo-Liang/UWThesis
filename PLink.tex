@@ -1,8 +1,8 @@
-\section{\plink: Discovering and Exploiting Datacenter Network Locality for Efficient Cloud-based Distributed Training}
+\chapter{\plink: Discovering and Exploiting Datacenter Network Locality for Efficient Cloud-based Distributed Training}
 
 So far we have focused on accelerating distributed learning at a rack scale, by customizing hardware configuration, software stack, and network interconnect. While highly effective, not all of the optimizations are universally applicable, for example, in a public cloud environment. Further, even if all optimizations are applied, they do little to address cloud specific bottlenecks.
 
-\subsection{Specific Challenges in Public Clouds}
+\section{Specific Challenges in Public Clouds}
 Two major challenges exist in cloud-based training.
 
 \noindent\textbf{Non-uniform link bandwidth}. Host-to-host bandwidth in the cloud is non-uniform due to the hierarchical structure of the datacenter~(\textsection \ref{sec:datacenternetwork}). %, as VM nodes can be spread across different physical hosts, racks, rows or even clusters. %Practically, VMs can spread in multiple physical machines, racks, rows, or even clusters. If the network core utilization is high, or the oversubscription ratio is large, available bandwidth for a pair of VM flow will be smaller when compared to intra-rack traffic (section \ref{sec:datacenternetwork}). Achieving consistent high performance requires minimized cross rack traffic. 
@@ -31,7 +31,7 @@ Figure \ref{fig:dcnetworkcondition} shows a pairwise bandwidth probe of 32 VM no
 
 %\noindent\textbf{One route does not fit all}. The size of model of different layer in a neural network can vary significantly (e.g., the size of the largest layers in the popular ResNet-50 model is multi-megabytes in Caffe2 versus a small layer's model size of hundreds of bytes). This means the transmission time of some layers is latency-bound while some are bandwidth bound. Since the forward and backward passes process layers in a fixed order, a delay in the update of layer L will cause process stall of layer L+1 in forward pass or L-1 in backward pass. Therefore, optimally hiding communication latency requires different aggregation routes for different layers.
 
-\subsubsection{Inefficiencies in Existing Approaches}
+\subsection{Inefficiencies in Existing Approaches}
 \label{sec:differentReductionAlgorithms}
 We motivate our design by analyzing why some existing approaches do not perform optimally, as they rely on assumptions that aren't typically valid in the datacenter setting. 
 
@@ -73,7 +73,7 @@ Even with careful mapping, not all algorithms work optimally in the datacenter e
 	\label{table:algoCharacterization}
 \end{table}
 
-\subsubsection{2-level Hierarchical Aggregation (2LHA)}
+\subsection{2-level Hierarchical Aggregation (2LHA)}
 HA is not new, but most applications of \mlha are in contexts where the network topology is known. HA does not reduce the total amount of data transferred on the wire, but it can create more \textit{localized} traffic and avoid slow links.
 
 %trades more \textit{localized} traffic with higher \textit{latency}, because a piece of data needs to traverse multiple hops.
@@ -104,7 +104,7 @@ One important parameter in HA is the number of levels. Similar to~\cite{cool}, w
 
 \mlha is described here as a two-phase process for simplicity, but the intra- and inter-group aggregation can overlap. Effective \mlha also requires load-balanced LM and GM assignments within and across groups. Later we provide an implementation that satisfies these. Table \ref{table:algoCharacterization} shows the desirable properties of \mlha. Compared to CAs, the number of rounds in \mlha does not increase with the number of nodes and, compared to PSs, it requires significantly less cross-rack bandwidth.
 
-\subsection{Design and Implementation of \plink}
+\section{Design and Implementation of \plink}
 
 We now describe \plink, an optimized, topology-aware, and dynamic system that leverages HA for efficient cloud-based training. To optimally utilize datacenter networks, \plink must address the major challenges highlighted previously. \plink uses three components to achieve this.
 \begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt,leftmargin=1em]
@@ -114,7 +114,7 @@ We now describe \plink, an optimized, topology-aware, and dynamic system that le
     \item \autoplink: a mechanism that tracks training performance and adjusts the current GM and LM assignments to adapt to changes in the network conditions.
 \end{itemize}
 
-\subsubsection{Capturing Network Locality with \marcopolo}
+\subsection{Capturing Network Locality with \marcopolo}
 \label{sec:marcopolo}
 For accurate network topology discovery, \marcopolo must probe quickly and should not rely on knowledge of a particular datacenter. \marcopolo: (1) probes communication links between nodes to measure pairwise node distances, (2) denoises probed distances, and (3) clusters nodes.
 
@@ -201,7 +201,7 @@ Enforcing perfect balance is not optimal in cases where VMs are naturally cluste
 
 In order to evaluate the performance of \marcopolo, we also define \strongrandom, a grouping method for \mlha that operates without considering probe distances and simply produces $\sqrt{n}$ groups of size $\sqrt{n}$ uniformly at random. This is used later as a baseline.
 
-\subsubsection{Efficient HA with \ha}
+\subsection{Efficient HA with \ha}
 \label{sec:haimpl}
 \ha transforms grouping information from \marcopolo into a hierarchical reduction plan and efficiently executes it. \ha takes the crux of \phub and applies them to a TCP context to accommodate for the cloud environment where InfiniBand is not available.
 \ha supports various communication backends, including TCP, RoCE~\cite{softroce}, iWarp~\cite{softiwarp}, and InfiniBand.
@@ -324,7 +324,7 @@ The last step of a schedule is Deliver, where \ha copies the final value to the 
 
 Table \ref{table:codesign2lha} summarizes how \ha is designed to take advantage of properties in the distributed training workload to lower its overhead.
 
-\subsubsection{Reacting to Network Changes with \autoplink}
+\subsection{Reacting to Network Changes with \autoplink}
 \label{sec:autoplinkimpl}
 \autoplink collects performance information from \ha and watches for sudden changes in link conditions, reflected by the current training speed. %Instead of running \marcopolo in the background, which itself is resource intensive, \plink needs to take a lightweight approach that directly pinpoints the link bottleneck of training. 
 The goal of \autoplink is to dynamically compensate for link changes by redistributing LMs and GMs to VMs, so the time to finish an iteration is similar at both local and global levels.  %that slower VM nodes are serving less as GM or LM of chunks. %, so that nodes with less bandwidth are assigned fewer chunks. 
@@ -371,7 +371,7 @@ With blame for each node available, Finetune attempts a move of a single GM (or 
 
 %\arvind{some comments: (1) this overall sounds very heuristicy and will likely make the reviewers complain - the less heuristicy it is, it would be better; (2) not clear we need to describe both quicktune and finetune - might be simpler to just describe finetune; that might help it sound less heuristicy; (3) try to be as precise as possible about the algo.}
 
-\subsubsection{Integration with Training Frameworks}
+\subsection{Integration with Training Frameworks}
 \label{sec:integration}
 Integrating \plink with a training framework is straightforward. \plink{}'s initialization requires only a list of nodes and buffer sizes/addresses from the training framework. %Reduction is done by calling \code{reduce} in appropriate places.
 Here we demonstrate how \plink can be integrated with systems with training frameworks that have different design decisions.
@@ -379,4 +379,3 @@ Here we demonstrate how \plink can be integrated with systems with training fram
 Caffe2/Pytorch uses blocking reduction. \plink integration is done by extending Gloo~\cite{facebook35:online}'s \code{algorithm} object. Caffe2/Pytorch, by default, uses a concurrency limit to control the number of established connections per peer and simultaneous \code{allreduce} calls. \plink instead uses a single \ha instance to multiplex all requests.
 
 MxNet uses an asynchronous callback pattern, but \plink{}'s \code{reduce} is blocking. A separate thread is launched for invoking callbacks through \code{kv\_apps}'s infrastructure when a chunk has finished. Support for MxNet is enabled by extending PSLite~\cite{dmlcpsli50:online}'s \code{van} object. %Initialization of \plink is done by hooking into the \code{init} call of \code{kv\_dist\_server}.
-

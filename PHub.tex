@@ -1,4 +1,4 @@
-\section{\phub: Streamlined Software Stack for Rack-Scale PSs}
+\chapter{\phub: Streamlined Software Stack for Rack-Scale PSs}
 
 \begin{table}[tb!]
         \centering
@@ -30,7 +30,7 @@
 Hardware alone solves only part of the problem. Existing frameworks cannot efficiently use the full hardware capability of \pbox (for example, TensorFlow and MxNet support multiple interfaces only by spawning multiple PS processes). The result is, even with ample communication resources, existing PSs failed to hide communication latency and struggled to scale. Table \ref{table:frameworkPerf} shows that all major DNN training frameworks %failed to achieve 50\% scaling on a 56Gbps IPoIB network (112Gbps bidirectional) in our cluster with 8 workers and PSs. 
 do not scale well with a 56 Gbps IPoIB network.
 
-\subsection{Inefficient Software Stack}
+\section{Inefficient Software Stack}
 
 We investigated the cause for MxNet by breaking down the overhead for each major component of a training iteration (legends of Figure \ref{fig:overheadBreakdown}). Since all stages overlap one another, and since ideally we would like early stages to fully hide the latency of later stages, we show \textit{progressive overhead} in Figure \ref{fig:overheadBreakdown}: we gradually turned on different components in the MxNet distributed training pipeline, and each segment shows the \textit{additional overhead that previous stages could not hide}. Specifically, the compute segment shows how long the GPU is active; the data copy segment shows the additional overhead of turning on distributed training without aggregation and optimization; the aggregation and optimization segments show additional overheads of enabling them in that order; and the ``other'' overheads segment includes synchronization and overheads that are not specific to a single component. We explain the overhead for some components:
 
@@ -44,7 +44,7 @@ We investigated the cause for MxNet by breaking down the overhead for each major
 	\noindent \textbf{Synchronization:} MxNet's dispatcher thread needs to synchronize access with ZMQ threads, aggregation threads and an optimization thread via shared queues, leading to bad locality and increased synchronization overhead. 
 	
 	
-\subsection{\phub Software}
+\section{\phub Software}
 Based on above findings, we propose \phub, an optimized PS implementation that reduces framework overhead with software optimizations. With \phub, we aim to:
 
 % we rearchitected the PS to optimize the network stack, provide efficient gradient aggregation and optimization, and streamline the approach to sending and receiving gradients and model parameters. We also designed \phub to be a rack-scale parameter service, which allows job sharing and topology-aware reduction algorithms.
@@ -58,7 +58,7 @@ Based on above findings, we propose \phub, an optimized PS implementation that r
 
 We now software optimizations that benefit different stages in distributed training across all common PS configurations. % the network stack optimization, gradient aggregation and optimization, fine-grained key chunking, and chunk-to-core mapping. These software optimizations benefit common PS setups.
 
-\subsubsection{Network Stack Optimizations}
+\subsection{Network Stack Optimizations}
 \label{sec:IBOptimization}
 %We sought a solution that enabled zero-copy and kernel bypass for minimal latency and overhead when moving data. 
 We sought to mitigate data movement latency with zero-copy and kernel bypass. We chose InfiniBand (IB) since we were already familiar with the Verbs API, and it is available in major cloud providers~\cite{AzureWin5:online}. Note that similar results could be achieved over Ethernet using RoCE, DPDK or other frameworks. We followed the guidelines from~\cite{rdma}; we tried two and one-sided RDMA, and two-sided send/receive operations and found similar performance in our workload. We briefly highlight some implementation details:
@@ -71,7 +71,7 @@ We sought to mitigate data movement latency with zero-copy and kernel bypass. We
 
 %\phub leverages InfiniBand's zero-copy ability to reduce copies from the network to  GPU memory by re a per-key aggregation buffer set up during \code{Initialize}; the buffer aggregates gradients from multiple devices before pushing them out to the network. Thus, the only remaining copy to the buffer is from the GPU. For a single GPU, this copy can be eliminated using  GPU-Direct RDMA on supported devices. Before \phub uses InfiniBand as its data plane, it must register all memory used for communication. A worker can have only one model update executing concurrently. Thus, it is sufficient to allocate and register a buffer per worker for gradient reception, and a single buffer for the model. To minimize InfiniBand card memory registration cache misses, \phub pre-allocates all buffers to a single contiguous memory region that it registers. \phub memory registration is NUMA-aware. Memory is allocated on the same NUMA domain where the card resides to reduce QPI traffic between sockets. To keep track of pending operations, some metadata is required, such as current message meaning, sender and receiver information, opcode, and a timestamp used to execute the proper callback. To maximize bandwidth utilization, we encode all metadata into InfiniBand's queue pair number or immediate field. We also designed timestamps to be logical and deterministic, so they can be calculated by combining a global batch number with  message's key. This saves us an additional PCIe round trip (from IB send scatter/gather) to gather metadata when sending messages. 
 
-\subsubsection{Gradient Aggregation and Optimization}
+\subsection{Gradient Aggregation and Optimization}
 \label{sec:tallvswide}
 
 
@@ -130,7 +130,7 @@ Fourth, wide aggregation puts many threads to work in lock-step on pieces of dat
 
 We explored the benefits of caching by implementing two variants of each aggregator and optimizer: one using normal cached loads and stores, and one with non-temporal prefetches and stores. We found it beneficial to cache both the model and gradients. \phub{}'s aggregators and optimizers are fully extensible: implementations that comply with \phub{}'s API can be used during runtime.
 
-\subsubsection{Fine-grained Key Chunking}
+\subsection{Fine-grained Key Chunking}
 %\phub chunks key for two purposes. First, fine-grained key chunking lets \phub balance server and processor core load. This is important because different neural network layers can have significantly different total weight sizes, from a few bytes to tens of MBs. Second, fine-grained key chunking supports tall aggregation and optimization, so processor cores can be fully utilized.
 
 %This makes balancing server and processor core load challenging. By chunking the weight size into a series of virtual layers (a set of virtual keys) of small, fixed size, \phub can balance load of processor cores optimally.These virtual keys are then treated independently in model update; \phub relies on fined grained key chunking to support tall aggregation and optimization, usually at the size of a few to tens of kilobytes.
@@ -148,7 +148,7 @@ Finally, key chunking enables another important optimization: the overlapping of
 \end{figure}
 
 
-\subsubsection{Mapping a Chunk to a Core}
+\subsection{Mapping a Chunk to a Core}
 \label{sec:chunk2core}
 \phub's assignment of chunks to cores is computed during initialization. At that time, the set of all keys is sharded across the cores and interfaces available on PS nodes.
 A specific chunk is always directed to a particular queue pair,
@@ -161,15 +161,15 @@ All message transmission, reception, and processing for that chunk is done on th
 
 This scheme imposes challenges in balancing load across cores, queue pairs and completion queues. \phub uses a 4/3 approximation set partition algorithm to balance each component's workload at each level, which produces practically balanced assignments in our experiments. \phub{}'s chunk mapping mechanism is summarized in Figure \ref{fig:mappingChunkToCore}.
 
-\subsection{The \phub Service API and Interoperability with other Frameworks}
-\phub{}'s API is designed for compatibility with multiple DNN training frameworks. Workers use \phub by first calling \code{PHub::\\CreateService} on the connection manager. This sets up access control and a namespace for the training job and returns a handle. The client side uses the handle to finish setup. \phub uses the namespace and an associated nonce for isolation and access control. 
+\section{The \phub Service API and Interoperability with other Frameworks}
+\phub{}'s API is designed for compatibility with multiple DNN training frameworks. Workers use \phub by first calling \code{PHub::CreateService} on the connection manager. This sets up access control and a namespace for the training job and returns a handle. The client side uses the handle to finish setup. \phub uses the namespace and an associated nonce for isolation and access control. 
 
-Jobs call \code{PHub::ConnectService} to rendezvous servers and workers, exchanging addresses for communication. This call replaces \code{Van::Connect} in MxNet, \code{Context::connect\\FullMesh} in Caffe2 and \code{GrpcServer::Init} in TensorFlow. \code{PHub::InitService} causes the current \phub instance to allocate and register receive and merge buffers. \phub also authenticates each worker's identity using the nonce. Authentication is a one-time overhead and once a connection is established, \phub assumes the remote identity associated with that address/port/queue number does not change during training.
+Jobs call \code{PHub::ConnectService} to rendezvous servers and workers, exchanging addresses for communication. This call replaces \code{Van::Connect} in MxNet, \code{Context::connectFullMesh} in Caffe2 and \code{GrpcServer::Init} in TensorFlow. \code{PHub::InitService} causes the current \phub instance to allocate and register receive and merge buffers. \phub also authenticates each worker's identity using the nonce. Authentication is a one-time overhead and once a connection is established, \phub assumes the remote identity associated with that address/port/queue number does not change during training.
 
 \phub{}'s functional APIs include standard synchronous or asynchronous \code{PHub::Push/Pull} operations that are used in TensorFlow (\code{GraphMgr::SendInputs/RecvOutputs}) and MxNet (\code{KVStoreDist::PushImpl/PullImpl}). \phub also includes a fused \code{PHub::PushPull} operation that perform a push, waits until all pushes are complete, and pulls the latest model. The fused operation often saves a network round-trip as push and pulls are frequently issued consecutively. This operator can serve as a drop-in replacement for Caffe2's \code{Algorithm::Run}.
 
 
-\subsection{Interaction of \pbox and \phub}
+\section{Interaction of \pbox and \phub}
 \phub takes full advantage of \pbox by extending the chunk-to-core mapping scheme%It ensures balance across queue pairs, completion queues, interfaces, cores, and NUMA domains. 
 , ensuring balance across interfaces and NUMA domains. \phub further guarantees no inter-processor traffic on \pbox, and completion queues and queue pairs in an interface card are used by only one core in the same NUMA domain to promote locality and avoid coherence traffic. In essence, \pbox forms micro-shards inside a box.
 

@@ -68,6 +68,8 @@ In general, sharded PSs scale better at higher hardware costs. Colocated PSs red
 
 \noindent\textbf{Collective AllReduce (CA)}~\cite{Sack:2011:SCM:2522220,Thakur:2005:OCC:2747766.2747771,collectivesOptimization,blum2000architectures,bala1995ccl}. Popular in the context of MPI, all nodes in CA participate in the communication, usually running symmetric tasks. The end goal of CA is that all nodes have a globally-reduced copy of the data. Widely used CA in training deep learning models include halving-doubling~\cite{ImageNetIn1Hour}, ring and double binary tree~\cite{Operatio73:online, Sergeev2018HorovodFA}.
 
+CAs and PSs are not mutually exclusive. Using one does not excludes use of another. For example, ~\cite{10.1145/3302424.3303957} dynamically chooses CA or PS based on sparsity of a given key.
+
 Gradient aggregation can be \textit{flat} (e.g., use of PSes and CAs are generally flat) or \textit{hierarchical} (Hierarchical Aggregation, HA), which refers to the generic technique of aggregating data in multiple steps, from local to global. Exemplar usage of HA in the distributed training context include~\cite{firecaffe,choblueconnect,Geng:2018:HHP:3229543.3229544,sysmlblueconnect}, though in the context of proprietary networks. HA is highly flexible and supports mix and matching of multiple aggregation paradigms~\cite{topoawarempi, cool}.
 
 This paper focuses on the discussion of building efficient PSs, but most of the techniques still apply to accelerating CAs as well. 
