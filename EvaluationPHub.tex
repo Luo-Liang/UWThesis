@@ -193,7 +193,7 @@ Without aggregation and optimization, \pbox{}'s bidirectional memory bandwidth u
 We found that the caching version of the aggregator and optimizer performed significantly better than the cache-bypassing version, which hit the maximum memory bandwidth available on the \phub machine when combined with the memory bandwidth of worker sends and receives. The caching version, on the other hand, added only 8\% to total memory bandwidth usage; aggregation and optimization added only 1\% of overhead to the overall throughput in this benchmark, fully overlapping gradient transfer. 
 
 \begin{figure}[t!]
-	\includegraphics[width=\linewidth,trim=8 4 4 4,clip]{Figures/VSGloo.pdf}
+	\includegraphics[width=.7\linewidth,trim=8 4 4 4,clip]{Figures/VSGloo.pdf}
 	\caption{Left: Comparing Caffe2 + Gloo and MxNet + \pbox on an 10Gbps InfiniBand network. Right: Comparing MxNet + Gloo and MxNet + \pbox on a 56Gbps InfiniBand network with \code{ZeroComputeEngine}. }
 	\label{fig:gloo}
 \end{figure}
