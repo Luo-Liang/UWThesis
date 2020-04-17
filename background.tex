@@ -66,13 +66,28 @@ During synchronization, each worker sends and receives model updates from each P
 
 In general, sharded PSs scale better at higher hardware costs. Colocated PSs reduce total data movement on the network by $\frac{1}{N}$ with $N$ workers participating: the update for the partition of the model assigned to a colocated PS need not go through the network. While many frameworks default to CS configurations~\cite{MXNetont0:online, Distribu25:online}, in a colocated setup the PS process interferes with the training process, because both are contending for network and processing resources. Specifically, compared to NC PSs, \textit{each network interface must process roughly 2x the network traffic, because both the colocated worker and PS processes must send and receive model updates from remote hosts}, creating a major bottleneck in network-bound distributed training. 
 
-\noindent\textbf{Collective AllReduce (CA)}~\cite{Sack:2011:SCM:2522220,Thakur:2005:OCC:2747766.2747771,collectivesOptimization,blum2000architectures,bala1995ccl}. Popular in the context of MPI, all nodes in CA participate in the communication, usually running symmetric tasks. The end goal of CA is that all nodes have a globally-reduced copy of the data. Widely used CA in training deep learning models include halving-doubling~\cite{ImageNetIn1Hour}, ring and double binary tree~\cite{Operatio73:online, Sergeev2018HorovodFA}.
+\begin{figure}[t!]
+	\centering
+	\includegraphics[width=.6\linewidth]{Figures/collectivesAlgorithms.png}
+	\caption{Rounds of communications (color-coded) in various popular \collectives algorithms with 4 nodes.}
+	\label{fig:collectivesAlgorithm}
+\end{figure}
+
+\noindent\textbf{Collective AllReduce (CA)}~\cite{Sack:2011:SCM:2522220,Thakur:2005:OCC:2747766.2747771,collectivesOptimization,blum2000architectures,bala1995ccl}. Popular in the context of MPI, all nodes in CA participate in the communication, usually running symmetric tasks. The end goal of CA is that all nodes have a globally-reduced copy of the data. Widely used CA in training deep learning models include halving-doubling~\cite{ImageNetIn1Hour}, ring and double binary tree~\cite{Operatio73:online, Sergeev2018HorovodFA}. We characterize some of the popular \cmpi here.
+
+\noindent\textit{Ring}~\cite{patarasuk2009bandwidth}. As shown in Figure~\ref{fig:collectivesAlgorithm}(a), ring algorithm works by connecting nodes to form a virtual ring. Data is then passed along the ring sequentially. Ring algorithm requires $O(N)$ steps to complete, sending $O(NS)$ amount of data.
+
+\noindent\textit{Halving Doubling}~\cite{Thakur:2005:OCC:2747766.2747771}. As shown in Figure~\ref{fig:collectivesAlgorithm}(b), halving doubling works by recursively doubling the distance (in terms of rank ID) while halving the total amount of data sent in each round, requiring $O(log_{2}{N})$ steps to finish while also sending $O(NS)$ amount of data on wire.
+
+\noindent\textit{Tree}. Tree algorithms are versatile, in a simple form a single tree is built where data is transferred from leaves to the root and vice-versa~\cite{firecaffe}; in a more optimized setting, a pair of complementary binary trees are built to fully utilize the full bisection bandwidth~\cite{dbt}, each sending and receiving $S/2$. For binary tree \collectives algorithms, $O(log_2N)$ rounds of communication are required, also sending $O(NS)$ bytes on wire. 
+
+\noindent\textit{BCube}~\cite{glooalgo70:online}. BCube is very similar to halving doubling from a structural perspective, in the sense that nodes are organized into group of $B$ peers. BCube operates in $O(log_BN)$ rounds, and each node in each round would peer with an unique node in another $B-1$ groups. Each node communicates $\frac{S}{B^i}$ amount of data in round $i$. BCube achieving a total bytes on wire of $O(\sum_{i=0}^{log_BN-1}\frac{S}{B^{i+1}})$.
 
 CAs and PSs are not mutually exclusive. Using one does not excludes use of another. For example, ~\cite{10.1145/3302424.3303957} dynamically chooses CA or PS based on sparsity of a given key.
 
 Gradient aggregation can be \textit{flat} (e.g., use of PSes and CAs are generally flat) or \textit{hierarchical} (Hierarchical Aggregation, HA), which refers to the generic technique of aggregating data in multiple steps, from local to global. Exemplar usage of HA in the distributed training context include~\cite{firecaffe,choblueconnect,Geng:2018:HHP:3229543.3229544,sysmlblueconnect}, though in the context of proprietary networks. HA is highly flexible and supports mix and matching of multiple aggregation paradigms~\cite{topoawarempi, cool}.
 
-This paper focuses on the discussion of building efficient PSs, but most of the techniques still apply to accelerating CAs as well. 
+This paper mainly focuses on the discussion of building efficient PSs, but most of the techniques still apply to accelerating CAs as well. We'll demonstrate this in sections related to \cmpi. 
 
 \subsection{More Efficient Distributed Training: Prior Arts}
 Approaches to accelerating distributed training can be classified into one of the broad categories in the current literature.

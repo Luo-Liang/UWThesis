@@ -66,6 +66,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage[english]{babel}
 \usepackage{blindtext}
 \usepackage{bbm}
@@ -75,6 +76,8 @@
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage[font=small,skip=-0pt]{caption}
+\usepackage{amsmath}
+
 % \setmainfont[Ligatures=TeX]{DENG.TTF}
 \newenvironment{demo}
   {\begin{alltt}\leftskip3em
@@ -102,6 +105,16 @@
 \newcommand{\psliteib}{\mxnet IB\xspace}
 \newcommand{\pshard}{PShard\xspace}
 \newcommand{\pswitch}{PSwitch\xspace}
+
+\newcommand{\cmpilogo}{%
+  \begingroup\normalfont
+  \includegraphics[height=\fontcharht\font`\B]{Figures/cloud.png}%
+  \endgroup
+}
+
+\newcommand{\mpi}{Collectives\xspace}
+\newcommand{\collectives}{\mpi}
+\newcommand{\cmpi}{\cmpilogo\xspace{}PLink Collectives\xspace}
 
 % metafont font.  If logo not available, use the second form
 %
@@ -202,8 +215,10 @@ Special thanks to Novak Djokovic, we may never meet, but you bring inspirations 
 \input{PBox.tex}
 \input{PHub.tex}
 \input{PLink.tex}
+\input{PLink365.tex}
 \input{EvaluationPHub.tex}
 \input{EvaluationPLink.tex}
+\input{EvaluationPLinkCollectives}
 \input{Conclusion.tex}
 
 \bibliographystyle{plain}

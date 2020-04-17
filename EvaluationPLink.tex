@@ -265,7 +265,3 @@ At step=0, node 0's network throughput is $\approx$5~Gbps. At step=1, we limit i
 
 % With each model, we vary the batch size of each GPU to understand how the communication to computation ratio affects \plink{}'s effectiveness. Figure~\ref{fig:end2end} shows the speedup of \plink, ranging from 1.45x-3.04x on Azure, and 1.04x-1.75x on EC2. Unsurprisingly, \plink shows much larger speedups on models with higher communication to computation ratios than ones with lower ratios. In particular, training ResNet-50 on 64 VM nodes requires no more than 7~Gbps bandwidth, and speedup for \plink in this case comes from its reduced reduction latency. We also observe, surprisingly, that \plink{}'s effect is not very sensitive to the batch size chosen. %, and thus can deliver (albeit smaller) speedup even when the GPU memory is entirely full. We believe the difference in terms of speedup from the clouds come partially from how GPU clusters is organized, and partially from the fact that the relative speedup of \ha over halving doubling also differs across clouds (Figure~\ref{fig:baseline}).
 
-
-
-
-
