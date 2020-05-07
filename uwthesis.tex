@@ -165,12 +165,13 @@
 
 \setcounter{page}{-1}
 \abstract{%
-The explosion of data volume and ever-increasing speed of accelerators shifts the bottleneck of large-scale distributed learning tasks from computation to communication. We observe significant pressure on the communication backends of various mainstream learning systems in multiple environments. Achieving efficient larger scale learning relies on more effective communication plane.
+The explosion of data volume and ever-increasing speed of accelerators shift the bottleneck of large-scale distributed learning tasks from computation to communication. We observe significant pressure on the communication backends of various mainstream learning systems in multiple environments when running distributed learning tasks. Achieving efficient larger scale learning relies on more effective communication plane.
 
-We provide detailed analyses that root-causes the reasons affecting the efficiency of these systems in the context of different environments. We pinpoint bottlenecks from the software, hardware and network infrastructure stacks.  
+We provide detailed analysis that root-causes the reasons affecting the communication efficiency of these systems in the context of different environments. We pinpoint bottlenecks from the software, hardware and network infrastructure stacks.  
 
-We show how these obstacles can be overcome with a systematic codesign of a streamlined communication stack, a balanced hardware and cluster configuration with the distributed training workload, together with awareness of network topology and environment. We show this series of  approaches, named \pbox, \phub and \plink, accelerates distributed training from small clusters to datacenters and all the way to the commercial clouds while allows for variable degree of transparency: the \pseries series enables solutions with no code change required to full customization of hardware.
-}
+We show how these obstacles can be overcome with a systematic codesign of a streamlined communication stack, a balanced hardware and cluster configuration with the distributed training workload, together with awareness of network topology and environment. We show this series of approaches, named \pbox, \phub , \plink along with \cmpi, accelerate distributed training from small clusters to datacenters and all the way to the commercial clouds while providing varying degrees of customization to suit different needs.}
+%while allows for variable degree of transparency: the \pseries series enables solutions with no code change required to full customization of hardware.
+%}
  
 %
 % ----- contents & etc.

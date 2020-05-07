@@ -1,6 +1,6 @@
 \chapter {Introduction}
 
-Today, learning systems have gained significant attention in the literature for the overwhelming popularity of machine-learning (ML) related workloads. Most of work to date in the systems and architecture community has focused on improving the efficiency of evaluating trained models. This makes sense given that a model is trained only once but can be used many times for inference. However, arriving at a trained model frequently requires experimentation, and thus multiple training runs, each of which may take days. Accelerating the training process lets ML scientists iterate faster and design better model.
+Today, training systems have gained significant attention in the literature for the overwhelming popularity of machine-learning (ML) related workloads. Most of work to date in the system and architecture community has focused on improving the efficiency of evaluating trained models. This makes sense given that a model is trained only once but can be used many times for inference. However, arriving at a trained model frequently requires experimentation, and thus multiple training runs, each of which may take days. Accelerating the training process lets ML scientists iterate faster and design better model.
 
 Traditionally, training has been viewed as a compute-bound problem, best done in a single large compute node with many accelerators. However, the ever-growing data volume pushes for monster-sized models, a scale even the exponentiation of compute power growth in single device couldn't handle. As ML models get bigger, training time gets prohibitively longer. Timely training requires exploiting parallelism with a distributed system.
 
@@ -48,7 +48,7 @@ Traditionally, training has been viewed as a compute-bound problem, best done in
 \label{table:trend}
 \end{table}
 
-Table~\ref{table:trend} gives a taste of the evolution of machines learning models/techniques: they are getting increasingly more demanding in terms of compute resources, such that the use of hundreds or even thousands of machines and accelerators for weeks is commonplace. 
+Table~\ref{table:trend} gives a taste of the evolution of machines learning models/techniques: they are getting increasingly more demanding in terms of compute resources, so much that the use of hundreds or even thousands of machines and accelerators for parallel training for weeks is commonplace. 
 
 
 
@@ -59,7 +59,7 @@ The most common way of exploiting parallelism, ``data'' parallelism, consists of
 \begin{figure}
 	\centering
 	\includegraphics[width=.5\linewidth, trim=6 1 3 3,clip]{Figures/clusteroverhead.png}
-	\caption{Even with a fast, small-scale cluster, communication still takes most of the time duration training, wasting compute resources.}
+	\caption{Even with a fast, small-scale InfiniBand cluster, communication still can take up to 90\% of the time duration training, wasting compute resources.}
 	\label{fig:clusterOverhead}
 \end{figure}
 
@@ -70,11 +70,11 @@ The most common way of exploiting parallelism, ``data'' parallelism, consists of
 	\label{fig:accthroughput}
 \end{figure}
 
-To tackle these problems, a comprehensive codesign of software stack and hardware configuration is required. To that end, we provide a template for speccing an entity called \pbox that provides the near perfect communication to computation balance for acting as a parameter server in a distributed training job, and a companion piece of software, \phub that streamlines handling over gradient  transfer, aggregation and model optimization by carefully extracting locality inside a physical host and latency hiding. 
+To tackle these problems, a comprehensive codesign of software stack and hardware configuration is required. To that end, we provide a template for an entity called \pbox that provides the near perfect communication to computation balance for acting as a parameter server in a distributed training job, and a companion piece of software, \phub that streamlines handling of gradient transfer, aggregation and model optimization by carefully extracting locality inside a physical host and latency hiding. 
 
 While \pbox and \phub are effective, it is important to understand accelerating training in these specialized, privately-owned clusters does not complete the story: first, those hardware setups require steep investment and only a few have that luxury; second, since it is much easier to thoroughly optimize the entire stack in private clusters as we have control over the entire system, some optimizations are not always possible to be applied universally.
 
-An alternative to owning a private cluster is renting VMs from the public cloud, which has become a popular, more accessible approach. Currently, all major cloud providers offer racks of nodes with specialized accelerators (such as GPUs, TPUs, and custom FPGAs)~\cite{GoogleCl74:online,MachineL50:online,DeepLear23:online,sagemaker,brainwave,Jouppi:2017:IPA:3079856.3080246,222611} for ML workloads. But at the same time, scalable training in the public cloud isn't just a straightforward application of \pbox and \phub optimizations.
+An alternative to owning a private cluster is renting VMs from the public cloud, which has become a popular, more accessible approach. Currently, all major cloud providers offer racks of nodes with specialized accelerators (such as GPUs, TPUs, and custom FPGAs)~\cite{GoogleCl74:online,MachineL50:online,DeepLear23:online,sagemaker,brainwave,Jouppi:2017:IPA:3079856.3080246,222611} for ML workloads. %But at the same time, scalable training in the public cloud isn't just a straightforward application of \pbox and \phub optimizations.
 
 \begin{figure*}[t!]
 	\centering
@@ -83,12 +83,11 @@ An alternative to owning a private cluster is renting VMs from the public cloud,
 	\label{fig:cloudOverhead}
 \end{figure*}
 
-
-Even with modern frameworks and recent optimizations 
+But at the same time, even with modern frameworks and recent optimizations 
 (e.g., gradient compression and quantization~\cite{lin2017deep, cntk1bt, lim20183lc}, latency-hiding~\cite{poseidon, jayarajan2019priority,hashemi2018tictac}, optimized communication libraries~\cite{facebook35:online, Operatio73:online, dmlcpsli50:online} and large batch optimizations~\cite{ImageNetIn1Hour}), distributed training at scale on the public cloud still incurs high overhead: up to 90\% of total training time can be wasted waiting on the network (Figure~\ref{fig:cloudOverhead}). Further, existing solutions so far focus solely on addressing the \textit{bandwidth} bottleneck, and ignores cloud-specific challenges: the hierarchical network structure in datacenter breaks the usual assumption of link speed being uniform; multi-tenancy and the dynamic nature of the cloud traffic cause high variation in performance. All these add to the complexity of scaling up distributed training and can render existing solutions less effective. 
 
 Accelerating cloud-based distributed training thus requires paying attention to a third dimension (apart from software and hardware): the environment. First, we need an aggregation mechanism that is appropriate for network topologies that display bandwidth oversubscription, and that makes appropriate use of underprovisioned links.  Second, we need to be able to identify the underlying network topologies and bandwidth/latency constraints (or collectively, locality) even if the public cloud does not expose such information.  Finally, we need communication schemes that can react to changing network conditions, especially in the presence of interfering traffic generated by other tenants. Our solution is collectively called \plink, an optimized, locality-aware system that uses a fitted hierarchical aggregation scheme to extract locality from the underlying datacenter network, based on end-to-end network probes and dynamic network load. 
 
-To make \plink more general, we introduce an extension to \plink, called \cmpi, that optimizes cloud-based distributed training using \collectives, rather than parameter server, as the communication backend. Unlike \plink, \cmpi is non-intrusive, requires no code changes nor rebuild of existing application. Similar to \plink, \cmpi requires no support from the cloud provider.
+To make \plink more general, we introduce an extension to \plink, called \cmpi, that optimizes cloud-based distributed training using \collectives, rather than parameter server, as the communication backend. Unlike \plink, \cmpi is non-intrusive, requiring no code changes nor rebuilding of existing application. Similar to \plink, \cmpi requires no support from the cloud provider.
 
-With \pbox, \phub, \plink and \cmpi, we complete the picture of accelerating machine learning of all kinds, ubiquitously, with efficient implementation of parameter servers. In the following sections, we start with an overview of the mechanism of distributed training, then we walk through each of the proposed solution in detail. We show how specific optimizations adopted target directly at the bottlenecks in each scenario and lead to end-to-end speedup in real-world learning tasks.
+With \pbox, \phub, \plink and \cmpi, we complete the picture of accelerating training tasks of all kinds, ubiquitously, with efficient implementation of parameter servers and optimized \collectives. In the following sections, we start with an overview of the mechanism of distributed training, then we walk through each of the proposed solution in detail. We show how specific optimizations adopted target directly at the bottlenecks in each scenario and lead to end-to-end speedup in real-world training tasks.
