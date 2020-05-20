@@ -6,7 +6,7 @@ We now shift our focus from building efficient parameter servers to another popu
 \section{Unoptimal use of Collectives Today}
 \mpi algorithms work by decomposing a compound operation into a series of point to point operations between two ranks of nodes according to a predefined communication schedule. Generally, the ranks of nodes are assigned from a list of IP addresses, which assumes no particular order. Since the \mpi algorithms dictate communication on top of the rank abstraction, the outcome does not rely on a specific mapping of IP address to rank.
 
-\begin{figure}[h!]
+\begin{figure}[ht]
 	\centering
 	\includegraphics[width=.5\linewidth, trim=8 3 14 14,clip]{Figures/azringperformance.png}
 	\caption{Performance distribution of \textit{allreduce} task of 100MB data with ring algorithm varies widely with 500 random rank orders on \azure.}
