@@ -204,7 +204,7 @@ In order to evaluate the performance of \marcopolo, we also define \strongrandom
 \subsection{Efficient HA with \ha}
 \label{sec:haimpl}
 \ha transforms grouping information from \marcopolo into a hierarchical reduction plan and efficiently executes it. \ha takes the crux of \phub and applies them to a TCP context to accommodate for the cloud environment where InfiniBand is not available.
-\ha supports various communication backends, including TCP, RoCE~\cite{softroce}, iWarp~\cite{softiwarp}, and InfiniBand.
+\ha supports various communication backends, including TCP, RoCE~\cite{softroce}, iWarp~\cite{softiwarp}, and InfiniBand (supported through \phub). To avoid repeating similar contents, we only highlight the difference of \ha and \phub.
 
 %, to maintain compatibility with all environments. We now briefly describe \ha in the context of TCP. %On clouds with Ethernet-only support such as EC2, \ha can still support RDMA with SoftiWarp~\cite{softiwarp} and SoftRoCE~\cite{softroce}, although we didn't find any performance benefit of doing so compared to using a native TCP backend.
 
@@ -371,11 +371,11 @@ With blame for each node available, Finetune attempts a move of a single GM (or 
 
 %\arvind{some comments: (1) this overall sounds very heuristicy and will likely make the reviewers complain - the less heuristicy it is, it would be better; (2) not clear we need to describe both quicktune and finetune - might be simpler to just describe finetune; that might help it sound less heuristicy; (3) try to be as precise as possible about the algo.}
 
-\subsection{Integration with Training Frameworks}
-\label{sec:integration}
-Integrating \plink with a training framework is straightforward. \plink{}'s initialization requires only a list of nodes and buffer sizes/addresses from the training framework. %Reduction is done by calling \code{reduce} in appropriate places.
-Here we demonstrate how \plink can be integrated with systems with training frameworks that have different design decisions.
+%\subsection{Integration with Training Frameworks}
+%\label{sec:integration}
+%Integrating \plink with a training framework is straightforward. \plink{}'s initialization requires only a list of nodes and buffer sizes/addresses from the training framework. %Reduction is done by calling \code{reduce} in appropriate places.
+%Here we demonstrate how \plink can be integrated with systems with training frameworks that have different design decisions.
 
-Caffe2/Pytorch uses blocking reduction. \plink integration is done by extending Gloo~\cite{facebook35:online}'s \code{algorithm} object. Caffe2/Pytorch, by default, uses a concurrency limit to control the number of established connections per peer and simultaneous \code{allreduce} calls. \plink instead uses a single \ha instance to multiplex all requests.
+%Caffe2/Pytorch uses blocking reduction. \plink integration is done by extending Gloo~\cite{facebook35:online}'s \code{algorithm} object. Caffe2/Pytorch, by default, uses a concurrency limit to control the number of established connections per peer and simultaneous \code{allreduce} calls. \plink instead uses a single \ha instance to multiplex all requests.
 
-MxNet uses an asynchronous callback pattern, but \plink{}'s \code{reduce} is blocking. A separate thread is launched for invoking callbacks through \code{kv\_apps}'s infrastructure when a chunk has finished. Support for MxNet is enabled by extending PSLite~\cite{dmlcpsli50:online}'s \code{van} object. %Initialization of \plink is done by hooking into the \code{init} call of \code{kv\_dist\_server}.
+%MxNet uses an asynchronous callback pattern, but \plink{}'s \code{reduce} is blocking. A separate thread is launched for invoking callbacks through \code{kv\_apps}'s infrastructure when a chunk has finished. Support for MxNet is enabled by extending PSLite~\cite{dmlcpsli50:online}'s \code{van} object. %Initialization of \plink is done by hooking into the \code{init} call of \code{kv\_dist\_server}.

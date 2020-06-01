@@ -18,7 +18,7 @@ is calculated with respect to this error. The model is then \textit{updated} usi
 \end{figure}
 
 \subsection{Distributed Training}
-Broadly speaking, there are two extremes in terms of paradigms in distributed training: \textit{data} parallelism and \textit{model} parallelism, and many hybrid systems strike a balance between this two.
+Broadly speaking, there are two extremes in terms of paradigms in distributed training: \textit{data} parallelism and \textit{model} parallelism, and many hybrid systems strike a balance between these two.
 
 In data parallelism, there is the notion of \textit{workers} and \textit{servers}, two non-exclusive roles a node can take. Training data is prepartitioned to each individual workers, and servers store the current model parameters in a sharded manner. In the computation phase of each iteration, no data is exchanged until all workers derive the gradients; gradients are then sent to servers for processing.
 
@@ -39,6 +39,19 @@ We focus on synchronous training due to its simplicity and commonality in indust
 	\caption{Aggregation is commonly done with one of the three prevailing paradigms, parameter server, collectives all-reduce, and hierarchical aggregation in practice.}
 	\label{fig:aggregationapproaches}
 \end{figure}
+
+
+\begin{figure}[t!]
+	\centering
+	\includegraphics[width=.6\linewidth, trim=2 3 3 3,clip]{Figures/dc.png}
+	\caption{Overview of a typical datacenter network topology.}
+	\label{fig:dc}
+\end{figure}
+
+
+\subsection{Datacenter Network Topology}
+\label{sec:datacenternetwork}
+A typical datacenter network has a hierarchical, multi-tiered topology~\cite{Mysore2009PortLandAS,VL2,Roy2015InsideTS,incbricks} (Figure~\ref{fig:dc}). Machines are grouped into \textit{racks}, each connecting to a top-of-rack \textit{(ToR)} switch. ToR switches are connected to multiple upper level devices. This setup poses challenges for existing training systems: in this setting, the communication performance of two end-hosts is affected by where they reside: they enjoy full link bisection bandwidth within a rack, because link capacity is not shared at the rack-level, but if they are on different racks, the communication performance depends on link congestion and oversubscription ratio~\cite{Bilal2012ACS}. In this paper, we use \textit{locality} to refer to the cause of variation in communication performance, which includes: (1) physical topology: the location of the nodes and (2) dynamic network load. Efficient communication requires carefully architecting software to tap into both aspects~\cite{eyeQ, 27Octobe15:online}: solutions that ignore physical topology are subject to long-term communication imbalances, and those that ignore dynamic network load suffer from short-term inefficiencies.
 
 \subsection{Distributed Training is Here to Stay}
 Faster and more powerful accelerators (most notably TPUs~\cite{Jouppi:2017:IPA:3079856.3080246} and Nvidia DGX~\cite{AIResear61:online}) open up the possibility of training in a single device. It all of sudden seems plausible to build a ``supercomputer'' for training, which completely eliminates the need for costly communication. 
@@ -106,17 +119,6 @@ Orthogonal to large batch optimization, another line of work target at less sync
 
 \noindent\textbf{Accelerate at network level}. The emergence of programmable network devices open up the opportunity to accelerate distributed training at the core of network, allowing gradient aggregation in the network devices, resulting in lower parameter exchange latency and lower bandwidth requirement (e.g. broadcast of aggregated model can be efficiently done with a network switch~\cite{sapio2019scaling,luomotivating}). Current programmable devices are not without limits, enforcing hard constraints on compute and memory.
 
-\noindent\textbf{Codesign software with hardware, cluster, network and environment}. This is the approach where the software stack is codesigned with underlying hardware, cluster, physical network and environment, based on the observation that existing software stack does not take important factors (such as underlying hardware, the topology of the physical network, and the shared environments of the commercial clouds) into consideration. Examples of this approach include \plink{}~\cite{phubsocc, phubsysml}.
-
 \noindent\textbf{Improving cluster-level efficiency}. A series of work ~\cite{222611,Shen2018NexusA} target at an orthogonal goal, and instead of optimizing for each individual task, they aim to achieve an average high utilization of compute resources in a cluster, by time-sharing (preemption) and better placement.
 
-\begin{figure}[t!]
-	\centering
-	\includegraphics[width=.6\linewidth, trim=2 3 3 3,clip]{Figures/dc.png}
-	\caption{Overview of a typical datacenter network topology.}
-	\label{fig:dc}
-\end{figure}
 
-\subsection{Datacenter Network Topology}
-\label{sec:datacenternetwork}
-A typical datacenter network has a hierarchical, multi-tiered topology~\cite{Mysore2009PortLandAS,VL2,Roy2015InsideTS,incbricks} (Figure~\ref{fig:dc}). Machines are grouped into \textit{racks}, each connecting to a top-of-rack \textit{(ToR)} switch. ToR switches are connected to multiple upper level devices. In this setting, the communication performance of two end-hosts is affected by where they reside: they enjoy full link bisection bandwidth within a rack, because link capacity is not shared at the rack-level, but if they are on different racks, the communication performance depends on link congestion and oversubscription ratio~\cite{Bilal2012ACS}. In this paper, we use \textit{locality} to refer to the cause of variation in communication performance, which includes: (1) physical topology: the location of the nodes and (2) dynamic network load. Efficient communication requires carefully architecting software to tap into both aspects~\cite{eyeQ, 27Octobe15:online}: solutions that ignore physical topology are subject to long-term communication imbalances, and those that ignore dynamic network load suffer from short-term inefficiencies.

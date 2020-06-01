@@ -1,6 +1,6 @@
 \chapter{\pbox: a Balanced Hardware Design for Parameter Servers at Rack-Scale}
 \label{sec:phub}
-We now describe \pbox, the solution to inefficient distributed training for clusters with a flat network topology (rack-level). \pbox provides a re-design of a PS at the hardware level, and mostly applies to situations where the user assumes full control over the cluster. We start with the current problem with the PS software and hardware that runs it.
+We now describe \pbox, the solution to inefficient distributed training for clusters with a flat network topology (rack-level). \pbox provides a re-design of a PS at the hardware level, and mostly applies to situations where the user assumes full control over the cluster. We start with the current problem with the PS software and hardware that runs it. When deployed, \pbox serves as a centeralized parameter server in the cluster.
 
 \begin{table}
         \centering
@@ -64,7 +64,7 @@ We prototyped \pbox using an off-the-shelf server platform that was configured t
 
 \section{Multi-Rack Deployment and Topology-Aware Reduction}
 \label{sec:hierarchicalReduction}
-To extend service coverage of a single \pbox device, we associate a \pbox with a ToR during deployment, for two reasons. First, full bisection bandwidth is achievable for machines in the same rack, making it ideal for a central reduction entity as \pbox, while oversubscription occurs between the ToR and the cluster network. Second, as we show later, a single \pbox has enough scalability for a typical rack of worker machines.
+When needed, \pbox can be used to upscale distributed training to datacenter levels. To extend service coverage of a single \pbox device, we associate a \pbox with a ToR during deployment, for two reasons. First, full bisection bandwidth is achievable for machines in the same rack, making it ideal for a central reduction entity as \pbox, while oversubscription occurs between the ToR and the cluster network. Second, as we show later, a single \pbox has enough scalability for a typical rack of worker machines.
 
 When provisioned in each rack (Figure \ref{fig:pBoxDeployment}), \pbox{}es can form an array of sharded PSs, or run a \textit{hierarchical reduction} algorithm for a training task that spans multiple racks through the coordination of a connection manager. Hierarchical reduction works in three steps: first, each \pbox centrally aggregates gradient updates from workers in the same rack; then, the \pbox{} nodes start cross-rack aggregation and compute globally aggregated gradients; finally, each per-rack \pbox runs an optimizer on this gradient and broadcasts the new weights back to local workers.
 

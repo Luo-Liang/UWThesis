@@ -326,15 +326,16 @@ doi = {10.1214/ss/1177011077}
 }
 
 @Inbook{spearman,
-title="Spearman Rank Correlation Coefficient",
-bookTitle="The Concise Encyclopedia of Statistics",
-year="2008",
-publisher="Springer New York",
-address="New York, NY",
-pages="502--505",
-isbn="978-0-387-32833-1",
-doi="10.1007/978-0-387-32833-1_379",
-url="https://doi.org/10.1007/978-0-387-32833-1_379"
+title={Spearman Rank Correlation Coefficient},
+bookTitle={The Concise Encyclopedia of Statistics},
+author={Yadolah Dodge},
+year={2008},
+publisher={Springer New York},
+address={New York},
+pages={502--505},
+isbn={978-0-387-32833-1},
+doi={10.1007/978-0-387-32833-1_379},
+url={https://doi.org/10.1007/978-0-387-32833-1_379}
 }
 
 @inproceedings{Ke2017LightGBMAH,
@@ -595,7 +596,7 @@ year={2016}
 @misc{baidures3:online,
 	author = {Baidu},
 	title = {baidu-research/baidu-allreduce},
-	howpublished = {https://github.com/baidu-research/baidu-allreduce},
+	howpublished = {\url{https://github.com/baidu-research/baidu-allreduce}},
 	month = {},
 	year = {},
 	note = {(Accessed on 05/14/2018)}
@@ -1309,12 +1310,13 @@ year = {},
 note = {(Accessed on 12/07/2018)}
 }
 
-@inproceedings{eyeQ,
-author = {Jeyakumar, Vimalkumar and Alizadeh, Mohammad and Mazières, David and Prabhakar, Balaji and Kim, Changhoon},
-year = {2012},
-month = {06},
-pages = {8-8},
-title = {EyeQ: practical network performance isolation for the multi-tenant cloud}
+@inproceedings {eyeQ,
+author = {Vimalkumar Jeyakumar and Mohammad Alizadeh and David Mazi{\`e}res and Balaji Prabhakar and Changhoon Kim},
+title = {EyeQ: Practical Network Performance Isolation for the Multi-tenant Cloud},
+booktitle = {Presented as part of the },
+year = {Submitted},
+url = {https://www.usenix.org/conference/hotcloud12/workshop-program/jeyakumar},
+publisher = {{USENIX}},
 }
 
 @misc{27Octobe15:online,
@@ -1985,8 +1987,9 @@ ISSN={2163-5595},
 month={June},}
 
 @Inproceedings{data-center-tcp-dctcp,
-author = {Alizadeh, Mohammad and Greenberg, Albert and Maltz, Dave and Padhye, Jitu and Pate, Parveen and Prabhakar, Balaji and  and Sridharan, Murari},
-title = {{}Data Center TCP (DCTCP)}},
+author = {Alizadeh, Mohammad and Greenberg, Albert and Maltz, Dave and Padhye, Jitu and Pate, Parveen and Prabhakar, Balaji and Sengupta, Sudipta and Sridharan, Murari},
+title = {Data Center TCP (DCTCP)},
+booktitle = {SIGCOMM 2010},
 year = {2010},
 month = {September},
 abstract = {Cloud data centers host diverse applications, mixing workloads that require small predictable latency with others requiring large sustained throughput. In this environment, today’s state-of-the-art TCP protocol falls short. We present measurements of a 6000 server production cluster and reveal impairments that lead to high application latencies, rooted in TCP’s demands on the limited buffer space available in data center switches. For example, bandwidth hungry “background” flows build up queues at the switches, and thus impact the performance of latency sensitive “foreground” traffic. To address these problems, we propose DCTCP, a TCP-like protocol for data center networks. DCTCP leverages Explicit Congestion Notification (ECN) in the network to provide multi-bit feedback to the end hosts. We evaluate DCTCP at 1 and 10Gbps speeds using commodity, shallow buffered switches. We find DCTCP delivers the same or better throughput than TCP, while using 90% less buffer space. Unlike TCP, DCTCP also provides high burst tolerance and low latency for short flows. In handling workloads derived from operational measurements, we found DCTCP enables the applications to handle 10X the current background traffic, without impacting foreground traffic. Further, a 10X increase in foreground traffic does not cause any timeouts, thus largely eliminating incast problems.},
@@ -2213,12 +2216,15 @@ note = {(Accessed on 03/19/2019)}
   publisher={Elsevier}
 }
 
-@inproceedings{ke2017lightgbm,
-  title={Lightgbm: A highly efficient gradient boosting decision tree},
-  author={Ke, Guolin and Meng, Qi and Finley, Thomas and Wang, Taifeng and Chen, Wei and Ma, Weidong and Ye, Qiwei and Liu, Tie-Yan},
-  booktitle={Advances in neural information processing systems},
-  pages={3146--3154},
-  year={2017}
+@incollection{NIPS2016_6381,
+title = {A Communication-Efficient Parallel Algorithm for Decision Tree},
+author = {Meng, Qi and Ke, Guolin and Wang, Taifeng and Chen, Wei and Ye, Qiwei and Ma, Zhi-Ming and Liu, Tie-Yan},
+booktitle = {Advances in Neural Information Processing Systems 29},
+editor = {D. D. Lee and M. Sugiyama and U. V. Luxburg and I. Guyon and R. Garnett},
+pages = {1279--1287},
+year = {2016},
+publisher = {Curran Associates, Inc.},
+url = {http://papers.nips.cc/paper/6381-a-communication-efficient-parallel-algorithm-for-decision-tree.pdf}
 }
 
 @article{friedman2001greedy,
@@ -2480,3 +2486,51 @@ pages="1005--1013",
 abstract="The majority of Internet users rely on the Transmission Control Protocol (TCP) to download large multimedia files from remote servers (e.g. P2P file sharing). TCP has been advertised as a fair-share protocol. However, when session round-trip-times (RTTs) radically differ from each other, the share (of the bottleneck link) may be anything but fair. This motivates us to explore a new TCP, TCP Libra, that guarantees fair sharing regardless of RTT.",
 isbn="978-3-540-72606-7"
 }
+
+@INPROCEEDINGS{7092922,
+  author={B. {Zhang} and Y. {Ruan} and J. {Qiu}},
+  booktitle={2015 IEEE International Conference on Cloud Engineering}, 
+  title={Harp: Collective Communication on Hadoop}, 
+  year={2015},
+  volume={},
+  number={},
+  pages={228-233},}
+  
+  @InProceedings{10.1007/978-3-642-33518-1_16,
+author="Bureddy, D.
+and Wang, H.
+and Venkatesh, A.
+and Potluri, S.
+and Panda, D. K.",
+editor="Tr{\"a}ff, Jesper Larsson
+and Benkner, Siegfried
+and Dongarra, Jack J.",
+title="OMB-GPU: A Micro-Benchmark Suite for Evaluating MPI Libraries on GPU Clusters",
+booktitle="Recent Advances in the Message Passing Interface",
+year="2012",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="110--120",
+abstract="General-Purpose Graphics Processing Units (GPGPUs) are becoming a common component of modern supercomputing systems. Many MPI applications are being modified to take advantage of the superior compute potential offered by GPUs. To facilitate this process, many MPI libraries are being extended to support MPI communication from GPU device memory. However, there is lack of a standardized benchmark suite that helps users evaluate common communication models on GPU clusters and do a fair comparison for different MPI libraries. In this paper, we extend the widely used OSU Micro-Benchmarks (OMB) suite with benchmarks that evaluate performance of point-point, multi-pair and collective MPI communication for different GPU cluster configurations. Benefits of the proposed benchmarks for MVAPICH2 and OpenMPI libraries are illustrated.",
+isbn="978-3-642-33518-1"
+}
+
+@inproceedings{10.1145/1851182.1851192,
+author = {Alizadeh, Mohammad and Greenberg, Albert and Maltz, David A. and Padhye, Jitendra and Patel, Parveen and Prabhakar, Balaji and Sengupta, Sudipta and Sridharan, Murari},
+title = {Data Center TCP (DCTCP)},
+year = {2010},
+isbn = {9781450302012},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1851182.1851192},
+doi = {10.1145/1851182.1851192},
+booktitle = {Proceedings of the ACM SIGCOMM 2010 Conference},
+pages = {63–74},
+numpages = {12},
+keywords = {TCP, ECN, data center network},
+location = {New Delhi, India},
+series = {SIGCOMM ’10}
+}
+
+
+
