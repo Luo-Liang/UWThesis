@@ -21,6 +21,7 @@ We implemented a cache-enabled optimizer using SGD with Nesterov's accelerated g
 
 \begin{table}[t!]
 	\centering
+	\footnotesize
 	\begin{tabular}{|c|c|c|c|}
 		\hline 
 		Name (Abbr)           & Model Size & Time/batch & Batch \\
@@ -171,6 +172,7 @@ Caching benefits many \phub operations. For example, models can be sent directly
 
 \begin{table}[t!]
 	\centering
+    \footnotesize
 	\begin{tabular}{|c|c|c|}
 		\hline 
 		& Mem BW & Throughput\\
@@ -269,7 +271,7 @@ We then built a loopback microbenchmark that used the IB cards to copy data loca
 
 \begin{figure}[t!]
     \centering
-	\includegraphics[width=.7\linewidth,trim=3 2 2 2,clip]{Figures/Scalability.pdf}
+	\includegraphics[width=.6\linewidth,trim=3 2 2 2,clip]{Figures/Scalability.pdf}
 	\caption{\pbox{} scalability is limited by the throughput of the PCIe to the on-chip network bridge of the PBox processors. \phub{} can utilize 97\% of the measured peak PCIe bandwidth.}
 	\label{fig:scalablity}
 \end{figure}
@@ -301,7 +303,7 @@ Figure \ref{fig:multijobs} shows the overhead of running multiple independent tr
 
 \begin{figure}[t!]
     \centering
-	\includegraphics[width=.7\linewidth,trim=2 6 2 2,clip]{Figures/HierarchicalSim.pdf}
+	\includegraphics[width=.5\linewidth,trim=2 6 2 2,clip]{Figures/HierarchicalSim.pdf}
 	\caption{Emulated overhead of hierarchical reduction with \pbox.}
 	\label{fig:hierarchical}
 \end{figure}

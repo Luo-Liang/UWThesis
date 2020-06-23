@@ -11,7 +11,7 @@ Unfortunately, achieving good \mpi performance in a cloud environment is fundame
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=.7\linewidth, trim=8 3 14 10,clip]{Figures/azringperformance.png}
+    \includegraphics[width=.5\linewidth, trim=8 3 14 10,clip]{Figures/azringperformance.png}
     \caption{Performance distribution of \textit{allreduce} task of 100MB data with ring algorithm varies widely with 500 random rank orders on \azure.}
     \label{fig:azringperformance}
 \end{figure}
@@ -71,7 +71,7 @@ To accurately and efficiently probe for pairwise latency, we built an in-house D
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=\linewidth]{Figures/tcpchartacteristics.png}
+    \includegraphics[width=.7\linewidth]{Figures/tcpchartacteristics.png}
     \caption{Left: TCP throughput depends on the buffer size and the number of concurrent streams. Right: while TCP is designed to be fair, an empirical 60s trace in the cloud shows the two streams connecting to the same VM from two other remote VMs do not share the bandwidth equally.}
     \label{fig:tcpchartacteristics}
 \end{figure}
