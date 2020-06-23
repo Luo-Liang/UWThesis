@@ -20,9 +20,7 @@ is calculated with respect to this error. The model is then \textit{updated} usi
 \subsection{Distributed Training}
 Broadly speaking, there are two extremes in terms of paradigms in distributed training: \textit{data} parallelism and \textit{model} parallelism, and many hybrid systems strike a balance between these two.
 
-In data parallelism, there is the notion of \textit{workers} and \textit{servers}, two non-exclusive roles a node can take. Training data is prepartitioned to each individual workers, and servers store the current model parameters in a sharded manner. In the computation phase of each iteration, no data is exchanged until all workers derive the gradients; gradients are then sent to servers for processing.
-
-In model parallelism, instead of partitioning training data, the model itself is being partitioned. This is handy because the multi-layer of modern DL models and well-defined dependencies make it simple to partition the model to different nodes. A piece of data then follows through the entire system, as if in the single node training case, except that it crosses node boundaries.
+In data parallelism, training data is pre-partitioned to each individual workers, and each worker sees only a partition of the data. In model parallelism, instead of partitioning training data, the model itself is being partitioned.% This is handy because the multi-layer of modern DL models and well-defined dependencies make it simple to partition the model to different nodes. A piece of data then follows through the entire system, as if in the single node training case, except that it crosses node boundaries.
 
 This paper mainly focuses on data parallelism, as it is the default choice in many frameworks and practices. The distributed training process (Figure~\ref{fig:distributedtraining}) using data parallelism is different in a few ways from training within a single node.
 %First, a mean gradient is calculated for each minibatch in each GPU. %
@@ -61,7 +59,7 @@ Unfortunately, building a training supercomputer does not avoid the problem of i
 On the other hand, any training that spans device boundary, not necessarily machine boundary, can be classified as distributed training, and the communication medium need not be limited to conventional network media, but can also include device buses. With this broad view, distributed training is inherent in deep learning. In fact, many have already started looking into optimization of inter-device communication within a single machine~\cite{wang2019blink}. %at each hierarchy (GPU vs PCI-E, Node vs Ethernet), we can observe large gap between the bandwidth of communication and compute. 
 
 \subsection{Gradient Aggregation: Common Practices}
-In a loose taxonomy, collecting gradients for aggregation is commonly done with one of the following paradigms (Figure~\ref{fig:aggregationapproaches}).
+In a loose taxonomy, collecting gradients for aggregation (known as parameter exchange) is commonly done with one of the following paradigms (Figure~\ref{fig:aggregationapproaches}).
 
 
 \begin{figure}[t!]
@@ -72,7 +70,7 @@ In a loose taxonomy, collecting gradients for aggregation is commonly done with 
 \end{figure}
 
 \noindent\textbf{Parameter Servers (PS)}~\cite{ps0,ps1,ps2,ps3, phubsocc, phubsysml, poseidon,cui2016geeps}. %Nodes are assigned the role of \textit{workers} or \textit{servers}. 
-PSs are key-value stores, where keys and values represent the model's layer IDs and parameters. PSs can be centralized or sharded. In each iteration, all workers update the model stored in PSs with their locally-produced gradients. PS configurations primarily differ along two axes: colocated (C) versus non-colocated (NC), and centralized (C) versus sharded (S). %In a colocated setting, a PS process can run with worker processes in the same machine. In a non-colocated setting, a machine is dedicated to a worker or a PS process.  
+PSs are key-value stores, where keys and values represent the model's layer IDs and parameters. PSs are well-suited for training at a small scale. PSs can be centralized or sharded. In each iteration, all workers update the model stored in PSs with their locally-produced gradients. PS configurations primarily differ along two axes: colocated (C) versus non-colocated (NC), and centralized (C) versus sharded (S). %In a colocated setting, a PS process can run with worker processes in the same machine. In a non-colocated setting, a machine is dedicated to a worker or a PS process.  
 A PS setup is colocated if a worker and a server process share the same physical machine. A PS setup is centralized if a single PS process handles all keys; and a sharded setup load-balances keys across multiple PS processes.
 %A centralized PS stores the entire model, whereas each sharded PS stores only a partition of the keys in the entire key space. The size of each partition is usually balanced by the available hardware resources. 
 During synchronization, each worker sends and receives model updates from each PS process. Figure \ref{fig:pssetups} illustrates the four combinations of choices from these two axes: Colocated Centralized (CC), Colocated Sharded (CS), Non-colocated Centralized (NC) and Non-colocated Sharded (NCS).
@@ -86,7 +84,7 @@ In general, sharded PSs scale better at higher hardware costs. Colocated PSs red
 	\label{fig:collectivesAlgorithm}
 \end{figure}
 
-\noindent\textbf{Collective AllReduce (CA)}~\cite{Sack:2011:SCM:2522220,Thakur:2005:OCC:2747766.2747771,collectivesOptimization,blum2000architectures,bala1995ccl}. Popular in the context of MPI, all nodes in CA participate in the communication, usually running symmetric tasks. The end goal of CA is that all nodes have a globally-reduced copy of the data. Widely used CA in training deep learning models include halving-doubling~\cite{ImageNetIn1Hour}, ring and double binary tree~\cite{Operatio73:online, Sergeev2018HorovodFA}. We characterize some of the popular \cmpi here.
+\noindent\textbf{Collective AllReduce (CA)}~\cite{Sack:2011:SCM:2522220,Thakur:2005:OCC:2747766.2747771,collectivesOptimization,blum2000architectures,bala1995ccl}. Popular in the context of MPI, CAs are widely used in larger-scale training. All nodes in CA participate in the communication, usually running symmetric tasks. The end goal of CA is that all nodes have a globally-reduced copy of the data. Widely used CA in training deep learning models include halving-doubling~\cite{ImageNetIn1Hour}, ring and double binary tree~\cite{Operatio73:online, Sergeev2018HorovodFA}. We characterize some of the popular \cmpi here.
 
 \noindent\textit{Ring}~\cite{patarasuk2009bandwidth}. As shown in Figure~\ref{fig:collectivesAlgorithm}(a), ring algorithm works by connecting nodes to form a virtual ring. Data is then passed along the ring sequentially. Ring algorithm requires $O(N)$ steps to complete, sending $O(NS)$ amount of data.
 
@@ -98,7 +96,7 @@ In general, sharded PSs scale better at higher hardware costs. Colocated PSs red
 
 CAs and PSs are not mutually exclusive. Using one does not exclude the use of other. For example, ~\cite{10.1145/3302424.3303957} dynamically chooses CA or PS based on sparsity of a given key.
 
-Gradient aggregation can be \textit{flat} (e.g., use of PSes and CAs are generally flat) or \textit{hierarchical} (Hierarchical Aggregation, HA), which refers to the generic technique of aggregating data in multiple steps, from local to global. Exemplar usage of HA in the distributed training context include~\cite{firecaffe,choblueconnect,Geng:2018:HHP:3229543.3229544,sysmlblueconnect}, though in the context of proprietary networks. HA is highly flexible and supports mix and matching of multiple aggregation paradigms~\cite{topoawarempi, cool}.
+Gradient aggregation can be \textit{flat} (e.g., use of PSes and CAs are generally flat) or \textit{hierarchical} (Hierarchical Aggregation, HA), which refers to the generic technique of aggregating data in multiple steps, from local to global. Exemplar usage of HA in the distributed training context include~\cite{firecaffe,choblueconnect,Geng:2018:HHP:3229543.3229544,sysmlblueconnect}, though in the context of proprietary networks. HA is highly flexible and supports mix and matching of multiple aggregation paradigms~\cite{topoawarempi, cool}. Hierarchical schemes are essential in enabling large-scale training. 
 
 This paper mainly focuses on the discussion of building efficient PSs, but most of the techniques still apply to accelerating CAs as well. We dedicate sections related to \cmpi to CAs. 
 
